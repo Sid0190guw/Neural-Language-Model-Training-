@@ -15,5 +15,3 @@ This Jupyter notebook contains a compact LSTM language-model smoke test designed
 - `*_smoke.pt` — model checkpoints
 - `*_smoke_loss.png` — loss plots
 
-## Notes
-- If you previously saw **Invalid Notebook** on GitHub, this file is valid `.ipynb` (nbformat 4.5). Upload it to your repo and GitHub will render it.
