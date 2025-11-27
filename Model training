@@ -1,0 +1,175 @@
+# Verify GPU
+import torch
+print("cuda available:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("Device:", torch.cuda.get_device_name(0))
+
+# Quick smoke-test run: upload dataset, tiny training for three regimes
+# Copy-paste into a Colab cell and run.
+
+# If you want to save outputs to Drive, uncomment and run the drive mount first.
+# from google.colab import drive
+# drive.mount('/content/drive')
+# DRIVE_SAVE = "/content/drive/MyDrive/Assignment2_outputs"
+DRIVE_SAVE = None  # set to path above if you mounted drive
+
+# ---------- Upload dataset ----------
+from google.colab import files
+import os, math, random, time
+import torch, torch.nn as nn
+from torch.utils.data import Dataset, DataLoader, random_split
+from collections import Counter
+import matplotlib.pyplot as plt
+
+print("PyTorch:", torch.__version__, "Device:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
+print("Upload the dataset file (Pride_and_Prejudice-Jane_Austen.txt) now via the file chooser...")
+
+uploaded = files.upload()  # click and select Pride_and_Prejudice-Jane_Austen.txt
+
+# find uploaded path
+dataset_name = None
+for fn in uploaded.keys():
+    if "pride" in fn.lower() or "prejudice" in fn.lower():
+        dataset_name = fn
+        break
+if dataset_name is None:
+    # list files in current dir
+    print("Uploaded files:", list(uploaded.keys()))
+    raise FileNotFoundError("Couldn't find dataset. Make sure you uploaded Pride_and_Prejudice-Jane_Austen.txt")
+
+txt_path = dataset_name
+print("Using dataset:", txt_path)
+
+# ---------- Simple preprocessing ----------
+def load_tokens(path):
+    txt = open(path, "r", encoding="utf-8").read()
+    txt = txt.replace("\r\n", "\n").replace("\n", " <nl> ").lower()
+    return txt.split()
+
+tokens = load_tokens(txt_path)
+print("Total tokens:", len(tokens))
+
+# ---------- Vocabulary ----------
+VOCAB_LIMIT = 8000
+counter = Counter(tokens)
+most_common = counter.most_common(VOCAB_LIMIT - 4)
+itos = ["<pad>","<unk>","<bos>","<eos>"] + [w for w,_ in most_common]
+stoi = {w:i for i,w in enumerate(itos)}
+unk_id = stoi["<unk>"]
+token_ids = [stoi.get(t, unk_id) for t in tokens]
+vocab_size = len(itos)
+print("Vocab size:", vocab_size)
+
+# ---------- Dataset class ----------
+class LM_Dataset(Dataset):
+    def __init__(self, ids, seq_len=30):
+        self.ids = ids
+        self.seq_len = seq_len
+    def __len__(self):
+        return len(self.ids) - self.seq_len
+    def __getitem__(self, idx):
+        x = torch.tensor(self.ids[idx:idx+self.seq_len], dtype=torch.long)
+        y = torch.tensor(self.ids[idx+self.seq_len], dtype=torch.long)
+        return x, y
+
+SEQ_LEN = 30
+dataset = LM_Dataset(token_ids, seq_len=SEQ_LEN)
+val_frac = 0.1
+val_size = int(len(dataset) * val_frac)
+train_size = len(dataset) - val_size
+train_ds, val_ds = random_split(dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42))
+print("Train seqs:", len(train_ds), "Val seqs:", len(val_ds))
+
+def get_loaders(batch):
+    return DataLoader(train_ds, batch_size=batch, shuffle=True), DataLoader(val_ds, batch_size=batch)
+
+# ---------- Model ----------
+class LSTMLM(nn.Module):
+    def __init__(self, vocab, emb=128, hid=256, layers=2, drop=0.2):
+        super().__init__()
+        self.emb = nn.Embedding(vocab, emb, padding_idx=0)
+        self.lstm = nn.LSTM(emb, hid, num_layers=layers, batch_first=True, dropout=drop)
+        self.fc = nn.Linear(hid, vocab)
+    def forward(self, x):
+        e = self.emb(x)
+        out, _ = self.lstm(e)
+        last = out[:, -1, :]
+        return self.fc(last)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Device used:", device)
+
+# ---------- Train / Eval helpers ----------
+def train_one_epoch(model, loader, opt, crit):
+    model.train()
+    total_loss = 0.0
+    total_count = 0
+    for xb, yb in loader:
+        xb, yb = xb.to(device), yb.to(device)
+        opt.zero_grad()
+        logits = model(xb)
+        loss = crit(logits, yb)
+        loss.backward()
+        opt.step()
+        total_loss += loss.item() * xb.size(0)
+        total_count += xb.size(0)
+    return total_loss / total_count
+
+def evaluate(model, loader, crit):
+    model.eval()
+    total_loss = 0.0
+    total_count = 0
+    with torch.no_grad():
+        for xb, yb in loader:
+            xb, yb = xb.to(device), yb.to(device)
+            loss = crit(model(xb), yb)
+            total_loss += loss.item() * xb.size(0)
+            total_count += xb.size(0)
+    return total_loss / total_count
+
+def run_smoke(config, name, epochs_small=True):
+    torch.manual_seed(42)
+    model = LSTMLM(vocab_size, emb=config["emb"], hid=config["hid"], layers=config["layers"], drop=config["drop"]).to(device)
+    opt = torch.optim.Adam(model.parameters(), lr=config["lr"])
+    crit = nn.CrossEntropyLoss()
+    train_loader, val_loader = get_loaders(config["batch"])
+    t_losses, v_losses = [], []
+    n_epochs = config["epochs"]
+    for e in range(1, n_epochs+1):
+        t = train_one_epoch(model, train_loader, opt, crit)
+        v = evaluate(model, val_loader, crit)
+        t_losses.append(t); v_losses.append(v)
+        print(f"[{name}] Epoch {e}/{n_epochs} train_loss={t:.4f} val_loss={v:.4f} val_ppl={math.exp(v):.2f}")
+    # save
+    out_dir = "/content"
+    fname = f"{name}_smoke.pt"
+    torch.save({"model_state": model.state_dict(), "config": config, "itos": itos, "stoi": stoi, "train_losses": t_losses, "val_losses": v_losses}, os.path.join(out_dir, fname))
+    # plot
+    plt.figure(figsize=(5,3))
+    plt.plot(t_losses, label="train")
+    plt.plot(v_losses, label="val")
+    plt.title(name + " (smoke test)")
+    plt.legend(); plt.grid(True)
+    png = os.path.join(out_dir, f"{name}_smoke_loss.png")
+    plt.savefig(png)
+    plt.show()
+    # Optionally copy to Drive
+    if DRIVE_SAVE:
+        os.makedirs(DRIVE_SAVE, exist_ok=True)
+        import shutil
+        shutil.copy(os.path.join(out_dir, fname), os.path.join(DRIVE_SAVE, fname))
+        shutil.copy(png, os.path.join(DRIVE_SAVE, os.path.basename(png)))
+    return fname, t_losses, v_losses
+
+# ---------- Small configs for a quick smoke test ----------
+import math
+under_cfg = {"emb":32, "hid":64, "layers":1, "drop":0.2, "epochs":2, "batch":128, "lr":1e-3}
+over_cfg  = {"emb":128, "hid":256, "layers":2, "drop":0.0, "epochs":3, "batch":64, "lr":1e-3}
+best_cfg  = {"emb":64, "hid":128, "layers":2, "drop":0.2, "epochs":3, "batch":64, "lr":1e-3}
+
+print("\nStarting short smoke tests (this may take a few minutes)...")
+u_f, u_tr, u_val = run_smoke(under_cfg, "underfit_smoke")
+o_f, o_tr, o_val = run_smoke(over_cfg,  "overfit_smoke")
+b_f, b_tr, b_val = run_smoke(best_cfg,  "bestfit_smoke")
+print("\nSmoke tests complete. Files saved to /content (and Drive if mounted).")
+
