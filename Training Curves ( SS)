@@ -1,0 +1,11 @@
+
+[underfit_smoke] Epoch 1/2 train_loss=6.3011 val_loss=6.0221 val_ppl=412.44
+[underfit_smoke] Epoch 2/2 train_loss=5.7544 val_loss=5.6870 val_ppl=295.01
+
+[overfit_smoke] Epoch 1/3 train_loss=5.9624 val_loss=5.5434 val_ppl=255.55
+[overfit_smoke] Epoch 2/3 train_loss=5.2361 val_loss=5.2727 val_ppl=194.95
+[overfit_smoke] Epoch 3/3 train_loss=4.8369 val_loss=5.1616 val_ppl=174.45
+
+[bestfit_smoke] Epoch 1/3 train_loss=6.1175 val_loss=5.7540 val_ppl=315.45
+[bestfit_smoke] Epoch 2/3 train_loss=5.4647 val_loss=5.4282 val_ppl=227.73
+[bestfit_smoke] Epoch 3/3 train_loss=5.1147 val_loss=5.2672 val_ppl=193.87
