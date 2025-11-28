@@ -86,7 +86,7 @@ Experiment	Perplexity (PPL)
 Underfit	295.01
 Overfit	174.45
 Best-fit	193.87
-
+---
 Loss curves and detailed analysis are included in:
 Assignment2_Complete_Report.pdF https://iitgoffice-my.sharepoint.com/:w:/g/personal/siddharth0190_op_iitg_ac_in/IQAAPiGIioDwT6gi8fVfmiPFAVm4ZMXMK4JAzzsh1Qh_GdI?CID=2e92873e-5aba-daff-874d-bf3bb80a5e22&e=RJWF1K
 
