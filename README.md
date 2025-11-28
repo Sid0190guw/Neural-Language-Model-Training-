@@ -33,8 +33,100 @@ To design, train, and analyse a neural **word-level language model** on a provid
 A standard LSTM-based language model:
 
 
+## Embedding Layer → LSTM → Fully Connected Linear Layer# 
+
+- **Embedding dimension**: configurable  
+- **Hidden dimension**: configurable  
+- **Number of layers**: configurable  
+- **Training objective**: Cross-entropy loss  
+- **Evaluation metric**: Perplexity (PPL)
+
+---
+
+## 📂 Repository Structure
+
+├── data_utils.py # Data processing & vocabulary creation
+├── model.py # LSTM Language Model architecture
+├── train.py # Training & evaluation script
+├── Assignment2_Complete_Report.pdf
+├── checkpoints/ # (Optional) Stored on Google Drive
+└── README.md
 
 
+---
+
+## 🚀 Running the Project
+
+### **1. Install Dependencies**
+```bash
+pip install torch numpy tqdm
+
+
+
+## 2. Train the Model
+python train.py
+
+
+## 3. Run a Specific Experimental Setting
+
+Underfitting example
+python train.py --embed 32 --hidden 32 --epochs 3 --lr 0.01
+
+Overfitting example
+python train.py --embed 256 --hidden 512 --epochs 50 --lr 0.001
+
+Best-fit example
+python train.py --embed 128 --hidden 256 --epochs 20 --lr 0.001
+
+📊 Results Summary
+
+Final validation perplexities (also mentioned in report and email) :
+
+Experiment	Perplexity (PPL)
+Underfit	295.01
+Overfit	174.45
+Best-fit	193.87
+
+Loss curves and detailed analysis are included in:
+Assignment2_Complete_Report.pdF https://iitgoffice-my.sharepoint.com/:w:/g/personal/siddharth0190_op_iitg_ac_in/IQAAPiGIioDwT6gi8fVfmiPFAVm4ZMXMK4JAzzsh1Qh_GdI?CID=2e92873e-5aba-daff-874d-bf3bb80a5e22&e=RJWF1K
+
+
+
+📁 Checkpoints & Loss Plots
+
+Trained model checkpoints and loss curve images are available in Google Drive:  https://drive.google.com/drive/folders/14DbdokQYdOIKL7a7dtO6NEJS6XngOuT7
+
+
+## 🎯 Reproducibility
+
+Fixed random seed
+
+Instructions compatible with CPU / GPU
+
+Scripts tested on Google Colab
+
+
+## 📄 Report
+
+A full report including:
+
+Objective
+
+Preprocessing steps
+
+Model architecture
+
+Hyperparameter settings
+
+Loss curves
+
+Interpretation of underfit/overfit behaviour
+
+Perplexity evaluation
+Deterministic loaders for consistent results
+
+
+# mORE....
 # Neural-Language-Model-Training-
 Train a neural language model from scratch using PyTorch. The goal is to demonstrate  understanding of how sequence models learn to predict text and how model design and  training affect performance. 
 # Neural Language Model - Smoke Test Notebook
