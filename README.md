@@ -1,331 +1,240 @@
-# Neural Language Model Training – Assignment 2  
+# Neural Language Model Training – Assignment 2
 **Research Internship Evaluation – IIIT Hyderabad**
 
-This repository contains my complete submission for **Assignment 2: Neural Language Model Training (PyTorch)** as part of the evaluation process for the Research Internship at **IIIT Hyderabad**.
+This repository contains the complete submission for **Assignment 2: Neural Language Model Training (PyTorch)** as part of the Research Internship evaluation at IIIT Hyderabad.
 
-The repository includes:
-- Full model implementation in PyTorch  
-- Data preprocessing utilities  
-- Training pipeline  
-- Three experimental regimes: **underfitting**, **overfitting**, and **best-fit**  
-- Loss curves and evaluation metrics  
-- Trained checkpoints (optional: stored on Google Drive)
-
----
-
-## 📌 Project Overview
-
-### **Objective**
-To design, train, and analyse a neural **word-level language model** on a provided text dataset using PyTorch, and demonstrate:
-- Underfitting  
-- Overfitting  
-- A well-generalized (best-fit) model  
-
-### **Dataset**
-- **Pride and Prejudice** (provided dataset)  
-- Word-level tokenization  
-- Vocabulary capped at **8000 tokens**
+It includes:
+- Full PyTorch implementation of a word-level language model
+- Data preprocessing utilities
+- Training pipeline
+- Three experimental regimes: underfitting, overfitting, and best-fit
+- Loss curves and evaluation metrics
+- (Optional) model checkpoints stored externally
 
 ---
 
-## 🧠 Model Architecture
+## Project Overview
+
+### Objective
+To design, train, and analyse a word-level neural language model using PyTorch and demonstrate:
+- Underfitting
+- Overfitting
+- A well-generalized (best-fit) model
+
+### Dataset
+- Pride and Prejudice (provided dataset)
+- Word-level tokenization
+- Vocabulary limited to 8000 tokens
+
+---
+
+## Model Architecture
 
 A standard LSTM-based language model:
 
+**Embedding Layer → LSTM → Fully Connected Linear Layer**
 
-## Embedding Layer → LSTM → Fully Connected Linear Layer# 
+Configurable parameters:
+- Embedding dimension
+- Hidden dimension
+- Number of layers
 
-- **Embedding dimension**: configurable  
-- **Hidden dimension**: configurable  
-- **Number of layers**: configurable  
-- **Training objective**: Cross-entropy loss  
-- **Evaluation metric**: Perplexity (PPL)
+Training:
+- Loss: Cross-entropy
+- Metric: Perplexity (PPL)
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
-├── data_utils.py # Data processing & vocabulary creation
-├── model.py # LSTM Language Model architecture
-├── train.py # Training & evaluation script
+```
+├── data_utils.py               # Data processing & vocabulary creation
+├── model.py                    # LSTM Language Model
+├── train.py                    # Training & evaluation script
 ├── Assignment2_Complete_Report.pdf
-├── checkpoints/ # (Optional) Stored on Google Drive
+├── checkpoints/                # (Optional) External storage
 └── README.md
-
+```
 
 ---
 
-## 🚀 Running the Project
+## Running the Project
 
-### **1. Install Dependencies**
+### 1. Install Dependencies
 ```bash
 pip install torch numpy tqdm
+```
 
-
-
-## 2. Train the Model
+### 2. Train the Model
+```bash
 python train.py
+```
 
+### 3. Example Experimental Settings
 
-## 3. Run a Specific Experimental Setting
-
-Underfitting example
+**Underfitting**
+```bash
 python train.py --embed 32 --hidden 32 --epochs 3 --lr 0.01
+```
 
-Overfitting example
+**Overfitting**
+```bash
 python train.py --embed 256 --hidden 512 --epochs 50 --lr 0.001
+```
 
-Best-fit example
+**Best-fit**
+```bash
 python train.py --embed 128 --hidden 256 --epochs 20 --lr 0.001
+```
 
-📊 Results Summary
-
-Final validation perplexities (also mentioned in report and email) :
-
-Experiment	Perplexity (PPL)
-Underfit	295.01
-Overfit	174.45
-Best-fit	193.87
 ---
-Loss curves and detailed analysis are included in:
-Assignment2_Complete_Report.pdF https://iitgoffice-my.sharepoint.com/:w:/g/personal/siddharth0190_op_iitg_ac_in/IQAAPiGIioDwT6gi8fVfmiPFAVm4ZMXMK4JAzzsh1Qh_GdI?CID=2e92873e-5aba-daff-874d-bf3bb80a5e22&e=RJWF1K
 
+## Results Summary
 
+| Experiment  | Perplexity |
+|-------------|------------|
+| Underfit    | 295.01     |
+| Overfit     | 174.45     |
+| Best-fit    | 193.87     |
 
-📁 Checkpoints & Loss Plots
+Detailed loss curves and analysis are included in:
+- Assignment2_Complete_Report.pdf
+- External Drive links for plots and checkpoints
 
-Trained model checkpoints and loss curve images are available in Google Drive:  https://drive.google.com/drive/folders/14DbdokQYdOIKL7a7dtO6NEJS6XngOuT7
+---
 
+## Checkpoints and Loss Plots
 
-## 🎯 Reproducibility
+Trained checkpoints and loss curve images are available in the linked Google Drive folder.
 
-Fixed random seed
+---
 
-Instructions compatible with CPU / GPU
+## Reproducibility
 
-Scripts tested on Google Colab
+- Fixed random seeds
+- CPU/GPU compatible instructions
+- Scripts tested on Google Colab
 
+---
 
-## 📄 Report
+## Detailed Report
 
-A full report including:
+The provided report includes:
+- Objective and dataset description
+- Preprocessing steps
+- Model architecture explanation
+- Hyperparameters
+- Loss curves
+- Behaviour analysis (underfit, overfit, best-fit)
+- Perplexity comparisons
+- Notes on deterministic dataloaders
 
-Objective
+---
 
-Preprocessing steps
+# Neural Language Model – Smoke Test Notebook
 
-Model architecture
+A compact LSTM-based smoke test notebook is provided for Google Colab.
 
-Hyperparameter settings
+### Running on Colab
+1. Open the notebook in Google Colab.
+2. (Optional) Enable GPU from the runtime menu.
+3. Upload the dataset text file when prompted.
+4. The notebook trains underfit, overfit, and best-fit models.
+5. Outputs are saved in `/content` unless Drive saving is enabled.
 
-Loss curves
-
-Interpretation of underfit/overfit behaviour
-
-Perplexity evaluation
-Deterministic loaders for consistent results
-
-
-# mORE....
-# Neural-Language-Model-Training-
-Train a neural language model from scratch using PyTorch. The goal is to demonstrate  understanding of how sequence models learn to predict text and how model design and  training affect performance. 
-# Neural Language Model - Smoke Test Notebook
-
-This Jupyter notebook contains a compact LSTM language-model smoke test designed for Google Colab.
-
-## How to run on Colab
-1. Upload the notebook to Google Drive or open it directly in Colab.
-2. **Runtime → Change runtime type → GPU** (optional but recommended).
-3. Run the first cell. When prompted, upload `Pride_and_Prejudice-Jane_Austen.txt` (public-domain text).
-4. The script trains three quick regimes (underfit / overfit / bestfit) and saves outputs to `/content`.
-   - To save to Drive, uncomment the drive mount lines and set `DRIVE_SAVE` accordingly.
-
-## Files produced
+### Files Produced
 - `*_smoke.pt` — model checkpoints
 - `*_smoke_loss.png` — loss plots
 
-📘 Neural Language Model Training (PyTorch)
+---
 
-This project implements a Neural Language Model trained from scratch using PyTorch, as required in Assignment 2: Neural Language Model Training.
-The goal is to demonstrate understanding of sequence models, loss behavior, perplexity, and generalization regimes (underfitting, overfitting, best-fit).
+# Assignment Objective Summary
 
-🧠 Objective
+The goal is to implement a word-level LSTM language model from scratch and evaluate how model capacity and training behaviour influence:
+- Bias (underfitting)
+- Variance (overfitting)
+- Generalization (best-fit)
 
-Build a word-level Language Model using PyTorch (no pre-trained models).
+Metrics such as training loss, validation loss, and perplexity guide model comparison.
 
-Train and evaluate:
+---
 
-Underfitting configuration
+# Dataset Details
 
-Overfitting configuration
+- Source: *Pride and Prejudice* by Jane Austen
+- Preprocessing includes:
+  - Lowercasing
+  - Tokenization
+  - Newline markers
+  - Vocabulary limiting
+  - Replacing rare words with `<unk>`
+  - Forming sequences of length 30 tokens
+  - Train/validation split
 
-Best-fit configuration
+Final token count: 138,682
 
-Generate Training vs Validation Loss curves.
+---
 
-Compute perplexity (PPL) as evaluation metric.
+# Model Details
 
-Compare the three regimes and justify the best-fit model.
+- Embedding layer
+- 1–3 LSTM layers (experiment dependent)
+- Optional dropout
+- Fully connected output layer
+- Loss: CrossEntropyLoss
+- Optimizer: Adam
+- Metric: Perplexity = exp(validation_loss)
 
-📂 Project Structure
-📁 project/
-│
-├── data/                     # Preprocessed dataset (Pride and Prejudice)
-│
-├── models/                   # Saved PyTorch model checkpoints
-│   ├── underfit.pt
-│   ├── overfit.pt
-│   └── bestfit.pt
-│
-├── loss_plots/               # Loss curves saved as PNG & PDF
-│   ├── underfit_train_val.png
-│   ├── overfit_train_val.png
-│   ├── bestfit_train_val.png
-│   ├── underfit_train_losses.npy
-│   └── ...
-│
-├── Neural.ipynb              # Main Colab notebook
-│
-├── train.py                  # Script version (optional)
-│
-└── README.md                 # (This file)
+---
 
-📚 Dataset
+# Training Configurations
 
-The dataset used is:
+## Underfitting
+- Embedding: 32  
+- Hidden size: 64  
+- Layers: 1  
+- Dropout: 0.2  
+- Epochs: 2  
+- Batch size: 128  
+- Learning rate: 1e-3  
 
-📘 Pride and Prejudice — Jane Austen
+## Overfitting
+- Embedding: 128  
+- Hidden size: 256  
+- Layers: 2  
+- Dropout: 0.0  
+- Epochs: 3  
+- Batch size: 64  
+- Learning rate: 1e-3  
 
-Preprocessing steps:
+## Best-Fit
+- Embedding: 128  
+- Hidden size: 256  
+- Layers: 2  
+- Dropout: 0.2  
+- Epochs: 3  
+- Batch size: 64  
+- Learning rate: 1e-3  
 
-Lowercasing
+---
 
-Replace newline \n with <nl>
+# Results
 
-Word-level tokenization (text.split())
+| Model      | Validation Loss | Perplexity |
+|------------|------------------|------------|
+| Underfit   | 5.6870           | 295.01     |
+| Overfit    | 5.1616           | 174.45     |
+| Best-fit   | 5.2672           | 193.87     |
 
-Keep top 8000 most frequent words
+Loss plots are located in the `loss_plots/` directory.
 
-Rare/unseen words mapped to <unk>
+---
 
-Sequence length = 30 tokens
+# Conclusion
 
-Split:
+The assignment demonstrates core concepts of neural language modeling:
+- Underfitting results from limited model capacity.
+- Overfitting results from excessive model capacity and memorization.
+- A best-fit model balances bias and variance.
 
-90% training
-
-10% validation
-
-Total tokens after preprocessing: 138,682
-
-🏗️ Model Architecture (LSTM Language Model)
-
-Embedding layer
-
-1–3 LSTM layers (depending on config)
-
-Dropout (0.0 to 0.2)
-
-Fully-connected layer → vocab logits
-
-Softmax
-
-Loss: CrossEntropyLoss
-
-Optimizer: Adam
-
-Metric: Perplexity = exp(validation_loss)
-
-⚙️ Training Configurations
-🔴 Underfitting
-Parameter	Value
-Embedding	32
-Hidden Size	64
-LSTM Layers	1
-Dropout	0.2
-Epochs	2
-Batch size	128
-LR	1e-3
-🔵 Overfitting
-Parameter	Value
-Embedding	128
-Hidden Size	256
-LSTM Layers	2
-Dropout	0.0
-Epochs	3
-Batch size	64
-LR	1e-3
-🟢 Best-Fit
-Parameter	Value
-Embedding	128
-Hidden Size	256
-LSTM Layers	2
-Dropout	0.2
-Epochs	3
-Batch size	64
-LR	1e-3
-📊 Results
-✔️ Final Perplexity
-Model	Validation Loss	Perplexity
-Underfit	5.6870	295.01
-Overfit	5.1616	174.45
-Best-Fit	5.2672	193.87
-📉 Training & Validation Loss Curves
-
-All loss curves are located in:
-
-loss_plots/
-
-
-Including:
-
-underfit_loss.png
-
-overfit_loss.png
-
-bestfit_loss.png
-
-.npy files containing raw loss values
-
-🚀 How to Run the Notebook (Google Colab)
-1️⃣ Open the notebook
-
-Click below (ensure you are logged into Google Drive):
-
-➡️ Neural.ipynb
-
-2️⃣ Install dependencies
-
-(If needed, inside Colab)
-
-pip install torch numpy matplotlib tqdm
-
-3️⃣ Run preprocessing
-
-This loads the dataset, tokenizes it, builds vocabulary, and prepares dataloaders.
-
-4️⃣ Train models
-
-Run the training cells:
-
-train_underfit = train_and_record(...)
-
-train_overfit = train_and_record(...)
-
-train_bestfit = train_and_record(...)
-
-5️⃣ View curves
-
-Plots will automatically appear and will also be saved into loss_plots/.
-
-🏁 Conclusion
-
-The assignment demonstrates:
-
-Underfitting → small model, high bias
-
-Overfitting → strong memorization, poor generalization
-
-Best-Fit → balanced performance and stability
-
-The best-fit LSTM model is selected because it achieves the best trade-off between perplexity and generalization.
+The best-fit configuration offers the most stable generalization performance based on perplexity and loss behaviour.
