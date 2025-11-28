@@ -1,3 +1,40 @@
+# Neural Language Model Training – Assignment 2  
+**Research Internship Evaluation – IIIT Hyderabad**
+
+This repository contains my complete submission for **Assignment 2: Neural Language Model Training (PyTorch)** as part of the evaluation process for the Research Internship at **IIIT Hyderabad**.
+
+The repository includes:
+- Full model implementation in PyTorch  
+- Data preprocessing utilities  
+- Training pipeline  
+- Three experimental regimes: **underfitting**, **overfitting**, and **best-fit**  
+- Loss curves and evaluation metrics  
+- Trained checkpoints (optional: stored on Google Drive)
+
+---
+
+## 📌 Project Overview
+
+### **Objective**
+To design, train, and analyse a neural **word-level language model** on a provided text dataset using PyTorch, and demonstrate:
+- Underfitting  
+- Overfitting  
+- A well-generalized (best-fit) model  
+
+### **Dataset**
+- **Pride and Prejudice** (provided dataset)  
+- Word-level tokenization  
+- Vocabulary capped at **8000 tokens**
+
+---
+
+## 🧠 Model Architecture
+
+A standard LSTM-based language model:
+
+
+
+
 # Neural-Language-Model-Training-
 Train a neural language model from scratch using PyTorch. The goal is to demonstrate  understanding of how sequence models learn to predict text and how model design and  training affect performance. 
 # Neural Language Model - Smoke Test Notebook
