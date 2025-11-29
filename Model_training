@@ -106,7 +106,6 @@ def train_one_epoch(model, loader, opt, crit):
         logits = model(xb)
         loss = crit(logits, yb)
         loss.backward()
-        nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         opt.step()
         total_loss += loss.item() * xb.size(0)
         total_count += xb.size(0)
@@ -169,3 +168,157 @@ u_f, u_tr, u_val = run_smoke(under_cfg, "underfit_smoke")
 o_f, o_tr, o_val = run_smoke(over_cfg,  "overfit_smoke")
 b_f, b_tr, b_val = run_smoke(best_cfg,  "bestfit_smoke")
 print("\nSmoke tests complete. Files saved to /content (and Drive if mounted).")
+
+# ----------------------------
+# Paste this cell into your Colab notebook
+# ----------------------------
+import os
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+from tqdm.auto import trange, tqdm
+
+def train_and_record(model,
+                     train_loader, val_loader,
+                     criterion, optimizer,
+                     epochs=5, prefix='run', device=None,
+                     save_dir='loss_plots'):
+    """
+    Trains model, records train/val losses per epoch, saves numpy arrays and plots.
+
+    - model: PyTorch nn.Module
+    - train_loader/val_loader: yield (inputs, targets) where targets are token ids
+    - criterion: loss function (e.g. nn.CrossEntropyLoss(reduction='none') or default)
+    - optimizer: optimizer instance
+    - epochs: number of epochs
+    - prefix: filename prefix, e.g. 'underfit', 'overfit', 'bestfit'
+    - device: 'cuda' or 'cpu' (auto-detected if None)
+    """
+    if device is None:
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = torch.device(device)
+    model.to(device)
+
+    os.makedirs(save_dir, exist_ok=True)
+
+    train_losses = []
+    val_losses = []
+
+    for epoch in range(1, epochs+1):
+        model.train()
+        running_loss = 0.0
+        tokens_seen = 0
+
+        pbar = tqdm(train_loader, desc=f"Train E{epoch}/{epochs}", leave=False)
+        for xb, yb in pbar:
+            xb = xb.to(device)
+            yb = yb.to(device)
+
+            optimizer.zero_grad()
+            logits = model(xb)   # shape: (batch, seq_len, vocab) OR adapt below
+            # Flatten depending on model output shape
+            if logits.dim() == 3:
+                B, S, V = logits.size()
+                logits_flat = logits.view(B*S, V)
+                targets_flat = yb.view(-1)
+            else:
+                logits_flat = logits
+                targets_flat = yb.view(-1)
+
+            loss = criterion(logits_flat, targets_flat)
+            # if criterion returns per-sample (reduction='none') reduce manually:
+            if isinstance(loss, torch.Tensor) and loss.dim() > 0:
+                loss_val = loss.mean()   # fallback
+            else:
+                loss_val = loss
+            # Multiply by tokens to accumulate consistent average if criterion averaged per token
+            # We'll use loss_val.item() * num_tokens_in_batch for stability
+            num_tokens = targets_flat.numel()
+            loss_val.backward()
+            optimizer.step()
+
+            running_loss += loss_val.item() * num_tokens
+            tokens_seen += num_tokens
+            pbar.set_postfix({'batch_loss': loss_val.item()})
+
+        epoch_train_loss = running_loss / tokens_seen
+        train_losses.append(epoch_train_loss)
+
+        # validation
+        model.eval()
+        val_running = 0.0
+        val_tokens = 0
+        with torch.no_grad():
+            for xb, yb in tqdm(val_loader, desc=f"Val E{epoch}/{epochs}", leave=False):
+                xb = xb.to(device)
+                yb = yb.to(device)
+                logits = model(xb)
+                if logits.dim() == 3:
+                    B, S, V = logits.size()
+                    logits_flat = logits.view(B*S, V)
+                    targets_flat = yb.view(-1)
+                else:
+                    logits_flat = logits
+                    targets_flat = yb.view(-1)
+                loss = criterion(logits_flat, targets_flat)
+                if isinstance(loss, torch.Tensor) and loss.dim() > 0:
+                    loss_val = loss.mean()
+                else:
+                    loss_val = loss
+                num_tokens = targets_flat.numel()
+                val_running += loss_val.item() * num_tokens
+                val_tokens += num_tokens
+        epoch_val_loss = val_running / val_tokens
+        val_losses.append(epoch_val_loss)
+
+        val_ppl = math.exp(epoch_val_loss) if epoch_val_loss < 700 else float('inf')
+        print(f"[{prefix}] Epoch {epoch}/{epochs}  train_loss={epoch_train_loss:.4f}  val_loss={epoch_val_loss:.4f}  val_ppl={val_ppl:.2f}")
+
+    # Save arrays
+    np.save(os.path.join(save_dir, f'{prefix}_train_losses.npy'), np.array(train_losses))
+    np.save(os.path.join(save_dir, f'{prefix}_val_losses.npy'),   np.array(val_losses))
+    print("Saved arrays to", save_dir)
+
+    # Plot
+    def plot_and_save(train_losses, val_losses, title, filename_root):
+        epochs_idx = np.arange(1, len(train_losses)+1)
+        plt.figure(figsize=(8,5))
+        plt.plot(epochs_idx, train_losses, label='train loss')
+        plt.plot(epochs_idx, val_losses, label='validation loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title(title)
+        plt.legend()
+        plt.grid(alpha=0.25)
+        final_val = float(val_losses[-1])
+        try:
+            ppl = math.exp(final_val)
+            plt.text(0.98, 0.98, f'Final val PPL: {ppl:.2f}', ha='right', va='top', transform=plt.gca().transAxes,
+                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        except OverflowError:
+            plt.text(0.98, 0.98, 'Final val PPL: overflow', ha='right', va='top', transform=plt.gca().transAxes)
+        png = filename_root + '.png'
+        pdf = filename_root + '.pdf'
+        plt.tight_layout()
+        plt.savefig(png, dpi=300)
+        plt.savefig(pdf, dpi=300)
+        plt.show()
+        plt.close()
+        print("Saved plots:", png, pdf)
+
+    plot_and_save(train_losses, val_losses, f'{prefix}: Train vs Validation Loss', os.path.join(save_dir, prefix + '_loss'))
+
+    return train_losses, val_losses
+
+# ----------------------------
+# Example: how to call it
+# Replace model, train_loader, val_loader, criterion, optimizer with your existing objects.
+# E.g.:
+# train_losses_underfit, val_losses_underfit = train_and_record(model_underfit, train_loader_underfit, val_loader_underfit, criterion, optimizer, epochs=3, prefix='underfit', device='cuda')
+#
+# After running, check:
+# %whos
+# ls loss_plots/
+#
+# ----------------------------
